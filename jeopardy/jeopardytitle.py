@@ -122,3 +122,92 @@ permutation = [151,160,137,91,90,15,
 for i in range(256):
     p[256+i] = p[i] = permutation[i]
 ##################################################################
+#Add & Subtract Money from Commenters (credit to McKenzie Tucker)#
+##################################################################
+class Jeopardy extends Component {
+  constructor(props) {
+    super(props);
+    this.client = new JeopardyService();
+    this.state = {
+      data: { category: {} },
+      score: 0,
+      answerGuess: "",
+    };
+  }
+  getNewQuestion() {
+    return this.client.getQuestion().then((result) => {
+      this.setState({
+        data: result.data[0],
+      });
+    });
+  }
+  componentDidMount() {
+    this.getNewQuestion();
+  }
+  handleChange = (event) => {
+    const answerGuess = event.target.value;
+    this.setState({ answerGuess });
+  };
+  handleSubmit = (event) => {
+    event.preventDefault();
+    this.setState({
+      submitted: true,
+    });
+  };
+  makeGuess = (event) => {
+    let score = this.state.score;
+    if (this.state.data.answer === this.state.answerGuess) {
+      score += this.state.data.value;
+    } else {
+      score -= this.state.data.value;
+    }
+    this.setState({ score, answerGuess: "" });
+    this.getNewQuestion();
+  };
+  render() {
+    return (
+      <div>
+        <Display
+          score={this.state.score}
+          data={this.state.data}
+          answerGuess={this.state.answerGuess}
+          handleChange={this.handleChange}
+          makeGuess={this.makeGuess}
+        />
+      </div>
+    );
+  }
+}
+###Part Two of Money###
+function Display(props) {
+  return (
+    <div>
+      <div>
+        <h3>Score: {props.score}</h3>
+      </div>
+      <div>
+        <h3>Category: {props.data.category.title}</h3>
+        <h3>$$$: {props.data.value}</h3>
+        <h3>Question: {props.data.question}</h3>
+        <h3>
+          <input
+            type="text"
+            value={props.answerGuess}
+            onChange={props.handleChange}
+          />
+        </h3>
+        <button onClick={props.makeGuess}>Submit Answer</button>
+      </div>
+    </div>
+  );
+}
+###Money Part 3###
+class JeopardyService {
+  constructor(url = "http://jservice.io/api/random", client = axios.create()) {
+    this.url = url;
+    this.client = client;
+  }
+  getQuestion() {
+    return this.client.get(this.url);
+  }
+}
